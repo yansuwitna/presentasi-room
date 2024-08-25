@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Presentation Viewer</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="/bootstrap.min.css">
+    <style>
+        #pdfViewer {
+            width: 300px;
+            /* height: 90vh; */
+            border: 5px solid black;
+            margin-top: 30px;
+            border-radius: 10px;
+            padding: 10px;
+            
+        }
+
+        .posisi{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="containers">
+        <div class="rows">
+            <div class="col-md-12 text-center posisi">
+                <div id="pdfViewer">
+                    <h1 class="text-center">SISWA</h1>
+                    <img src="siswa.png" alt="" width="100%">
+                    <form id="form" action="siswa">
+                        <label>Masukkan Kelas</label>
+                        <input type="text" name="room" class="form-control" required>
+                        <input type="submit" value="Masuk" class="btn btn-warning mt-2">
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

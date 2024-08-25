@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Kontrol Presentasi</title>
+    <link rel="stylesheet" href="/bootstrap.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/pdf.min.js"></script>
+    <style>
+        #pdfViewer {
+            width: 100%;
+            /* height: 90vh; */
+            border: 5px solid black;
+            margin-top: 10px;
+            border-radius: 10px;
+        }
+
+        #video {
+            width: 100%;
+            /* height: 90vh; */
+            border: 5px solid black;
+            margin-top: 10px;
+            border-radius: 10px;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="containerss">
+        <div class="rowss">
+            <div class="col-md-12">
+                <div id="controls" class="text-center">
+                    <table width="100%">
+                        <tr>
+                            <td width="1%" nowrap>
+                                <button id="prevSlide" class="btn btn-primary">
+                                    < Previous</button> </td> <td width="100%">
+                                        <a href="/upload/<%= room %>" class="btn btn-danger">Upload</a>
+                                        <button class="btn btn-warning" id="siswa">0 Siswa</i></button>
+                                        <button class="btn btn-success" id="slide">Slide : 0</i></button>
+                                        <button class="btn btn-info" id="jml_slide">Jml Slide : 0</i></button>
+                            </td>
+                            <td width="1%" nowrap>
+                                <button id="nextSlide" class="btn btn-primary">Next ></button>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+            <div class="col-md-12">
+                <canvas id="pdfViewer"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const room = '<%= room %>';
+        const url = '/presentation/<%= room %>';
+        const canvas = document.getElementById('pdfViewer');
+        const context = canvas.getContext('2d');
+        let pdfDoc = null;
+        let pageNum = 1;
+        let jmlSlide = 0;
+
+
+
+        socket.emit('joinRoom', room);
+
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            pdfDoc = pdf;
+            renderPage(pageNum);
+        });
+
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({
+                    scale: 5
+                });
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                page.render(renderContext);
+            });
+            //Kondisi Awal
+            if (jmlSlide == 0) {
+                document.getElementById("prevSlide").disabled = true;
+                document.getElementById("nextSlide").disabled = true;
+            } else if (pageNum == 1 && pageNum == jmlSlide) {
+                document.getElementById("prevSlide").disabled = true;
+                document.getElementById("nextSlide").disabled = true;
+            } else if (pageNum == 1 && pageNum < jmlSlide) {
+                document.getElementById("prevSlide").disabled = true;
+                document.getElementById("nextSlide").disabled = false;
+            } else if (pageNum > 1 && pageNum < jmlSlide) {
+                document.getElementById("prevSlide").disabled = false;
+                document.getElementById("nextSlide").disabled = false;
+            } else if (pageNum > 1 && pageNum == jmlSlide) {
+                document.getElementById("prevSlide").disabled = false;
+                document.getElementById("nextSlide").disabled = true;
+            }
+        }
+
+        document.getElementById('prevSlide').addEventListener('click', () => {
+            socket.emit('prev', {
+                room
+            });
+        });
+
+        document.getElementById('nextSlide').addEventListener('click', () => {
+            socket.emit('next', {
+                room
+            });
+        });
+
+        socket.on('jml_slide', jml => {
+            document.getElementById('jml_slide').innerHTML = 'Jml Slide : ' + (jml);
+            jmlSlide = jml;
+        });
+
+        socket.on('slide', index => {
+            pageNum = index;
+            document.getElementById('slide').innerHTML = " Slide Ke " + pageNum;
+
+            if (jmlSlide == 0) {
+                document.getElementById("prevSlide").disabled = true;
+                document.getElementById("nextSlide").disabled = true;
+            } else if (pageNum == 1 && pageNum == jmlSlide) {
+                document.getElementById("prevSlide").disabled = true;
+                document.getElementById("nextSlide").disabled = true;
+            } else if (pageNum == 1 && pageNum < jmlSlide) {
+                document.getElementById("prevSlide").disabled = true;
+                document.getElementById("nextSlide").disabled = false;
+            } else if (pageNum > 1 && pageNum < jmlSlide) {
+                document.getElementById("prevSlide").disabled = false;
+                document.getElementById("nextSlide").disabled = false;
+            } else if (pageNum > 1 && pageNum == jmlSlide) {
+                document.getElementById("prevSlide").disabled = false;
+                document.getElementById("nextSlide").disabled = true;
+            }
+
+            renderPage(pageNum);
+
+        });
+
+        socket.on('siswa', jml => {
+            document.getElementById('siswa').innerHTML = (jml - 1) + " Siswa";
+        });
+    </script>
+</body>
+
+</html>
