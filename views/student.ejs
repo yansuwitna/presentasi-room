@@ -6,6 +6,10 @@
     <title>Presentation Viewer</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="/bootstrap.min.css">
+    <!-- <script src="/pdf.min.js"></script> -->
+    <!-- <script src="/pdf.worker.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script> -->
+
     <style>
         #pdfViewer {
             width: 100%;
@@ -27,6 +31,7 @@
     </div>
 
     <script src="/pdf.min.js"></script>
+    <script src="/pdf.worker.min.js"></script>
     <script>
         const socket = io();
         const room = '<%= room %>';
@@ -37,6 +42,8 @@
         let pageNum = 1;
 
         socket.emit('joinRoom', room);
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
 
         pdfjsLib.getDocument(url).promise.then(pdf => {
             pdfDoc = pdf;

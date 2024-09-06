@@ -53,10 +53,14 @@ app.get('/guru', (req, res) => {
         //Jumlah Slide
         if (!jml_slide[room]) {
             let file = path.join(UPLOADS_DIR, `${room}.pdf`);
+            console.log('=============');
+            console.log('Guru : ' + file);
             try {
+                console.log('File ada');
                 fs.readFileSync(file);
             } catch (error) {
                 file = path.join(UPLOADS_DIR, `kosong.pdf`);
+                console.log('File Tidak ada');
             }
             getPageCount(file, req.query.room);
         }
@@ -138,7 +142,7 @@ app.get('/presentation/:room', (req, res) => {
 io.on('connection', (socket) => {
     socket.on('joinRoom', (room) => {
         socket.join(room);
-        // console.log('MASUK KELAS : ' + room);
+        console.log('MASUK KELAS : ' + room);
 
         //Jumlah Client
         nama[room] = io.sockets.adapter.rooms.get(room);
@@ -149,7 +153,7 @@ io.on('connection', (socket) => {
 
         //Posisi Slide
         if (!slide[room]) {
-            slide[room] = 0;
+            slide[room] = 1;
         }
 
         socket.on('next', ({ room }) => {
