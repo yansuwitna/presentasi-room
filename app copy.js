@@ -6,20 +6,6 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 
-const sqlite3 = require('sqlite3').verbose();
-const dbPath = path.join(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
-db.serialize(() => {
-    db.run(`
-    CREATE TABLE IF NOT EXISTS rooms (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT UNIQUE,
-      token TEXT
-    )
-  `);
-});
-module.exports = db;
-
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -60,41 +46,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Halaman utama untuk guru
 app.get('/guru', (req, res) => {
-    const room = req.query.room || "";
-    const token = req.query.token || "";
-    const masalah = req.query.masalah || 0;
-    const status = req.query.status || 0;
-    // console.log(token);return;
-
-    if (room == "") {  
-        res.render('home'); 
+    const room = req.query.room;
+    if (room == null) {
+        res.render('home');
     } else {
-        //Cek Data 
-        if (status==0) {
-            db.get("SELECT * FROM rooms WHERE name = ?", [room], (err, row) => {
-                if (err) return res.status(500).send("DB error");
-                console.log(row);
-                if (row) {
-                    console.log("pengecekan Token");
-                    if (token == row.token) { //Pengecekan Token
-                        console.log('Token Benar');return; 
-                        res.redirect(`/guru?room=${room}&token=${token}&status=1`); // Benar
-                    } else {
-                        console.log('Token Benar');return; 
-                        res.redirect(`/guru?masalah=2`); //Salah
-                    } 
-                } else {
-                    db.run("INSERT INTO rooms (name, token) VALUES (?, ?)", [room, token], function (err) {
-                        if (err) return res.redirect(`/guru?masalah=1`);
-                        console.log("Room baru dibuat:", room);
-                        res.redirect(`/guru?room=${room}&token=${token}&status=1`);
-                    });
-                }
-            });
-        }
-
-
-        //Menampilkasn Slide 
         //Jumlah Slide
         if (!jml_slide[room]) {
             let file = path.join(UPLOADS_DIR, `${room}.pdf`);
@@ -104,33 +59,20 @@ app.get('/guru', (req, res) => {
                 console.log('File ada');
                 fs.readFileSync(file);
             } catch (error) {
-                file = path.join(PUBLIC_DIR, `kosong.pdf`);
+                file = path.join(UPLOADS_DIR, `kosong.pdf`);
                 console.log('File Tidak ada');
             }
             getPageCount(file, req.query.room);
         }
-        res.render('teacher', { room: req.query.room, token: req.query.token, status: req.query.status });
+        res.render('teacher', { room: req.query.room });
     }
 });
 
 
 // Route untuk menyajikan halaman upload
-app.get('/upload', (req, res) => {
-    // console.log(req);return;
-    const room = req.query.room;  
-    const token = req.query.token; 
-    const status = req.query.status;  
-    res.render('upload', { room, token, status });
-});
-
-// Route untuk mengunggah file PDF
-app.post('/upload', upload.single('pdf'), (req, res) => {
-    const filePath = path.join(UPLOADS_DIR, `${req.body.room}.pdf`);
-    console.log(filePath);
-    getPageCount(filePath, req.body.room);
-    slide[req.body.room] = 0;
-
-    res.redirect(`/guru/?room=${req.body.room}&token=${req.body.token}&status=${req.body.status}`);
+app.get('/upload/:room', (req, res) => {
+    const room = req.params.room || 'kosong';
+    res.render('upload', { room });
 });
 
 // Halaman utama untuk siswa
@@ -148,7 +90,15 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
+// Route untuk mengunggah file PDF
+app.post('/upload', upload.single('pdf'), (req, res) => {
+    const filePath = path.join(UPLOADS_DIR, `${req.body.room}.pdf`);
+    console.log(filePath);
+    getPageCount(filePath, req.body.room);
+    slide[req.body.room] = 0;
 
+    res.redirect(`/guru/?room=${req.body.room}`);
+});
 
 async function getPageCount(filePath, room) {
     try {
@@ -181,7 +131,7 @@ app.get('/presentation/:room', (req, res) => {
         console.log(file)
         res.sendFile(file);
     } catch (err) {
-        let file = path.join(PUBLIC_DIR, 'kosong.pdf');
+        let file = path.join(UPLOADS_DIR, 'kosong.pdf');
 
         console.log(file)
         res.sendFile(file);

@@ -16,10 +16,12 @@
                         <form action="/upload" method="POST" enctype="multipart/form-data">
                             <div class="form-group">
                                 <input type="hidden" name="room" value="<%= room %>">
+                                <input type="hidden" name="token" value="<%= token %>">
+                                <input type="hidden" name="status" value="<%= status %>">
                                 <label for="fileUpload">Pilih File</label>
-                                <input type="file" class="form-control-file" id="pdf" name="pdf">
+                                <input type="file" class="form-control-file" id="pdf" name="pdf" required>
                             </div>
-                            <a href="/guru/?room=<%= room %>" class="btn btn-danger">Kembali</a> <button type="submit"
+                            <a href="/guru/?room=<%= room %>&token=<%= token %>&status=<%= status %>" class="btn btn-danger">Kembali</a> <button type="submit"
                                 class="btn btn-primary">Upload</button>
                         </form>
                     </div>
